@@ -15,19 +15,47 @@ public class Rational implements Scalar {
         this.denominator = copy.denominator;
     }
 
-//     private Rational(Integer inti){
-//        this(inti.get() ,1);
-//    }
+    public Rational(Scalar s){
+       this.set(s.asRational());
+    }
 
-
-    public Rational(int num, int den) { //constructor
+    public Rational(int num, int den){ //constructor
         this.numerator = num;
         if (den != 0) {
             this.denominator = den;
-        } else {
+        }
+        else {
             this.denominator = -1;
+            System.out.println(" AYHA.... Why divided by 0? "+this+" this is your obj now");
         }
 
+    }
+
+    public float get() {
+        float result = this.numerator/this.denominator;
+        return result;
+    }
+
+    public int getNumerator(){
+        return this.numerator;
+    }
+
+    public int getDenominator(){
+        return this.denominator;
+    }
+
+    public void setNumerator(int i){
+        this.numerator = i;
+    }
+
+    public void setDenominator(int i){
+        this.denominator =i;
+    }
+
+    public void set(Rational other){
+        Rational setter = new Rational(other.reduce());
+        this.numerator = setter.numerator;
+        this.denominator = setter.denominator;
     }
 
     public Rational reduce() {
@@ -38,70 +66,81 @@ public class Rational implements Scalar {
         }
         else {
             int dev = this.findMinDiv();
-            result.numerator = this.numerator/dev;
-            result.denominator = this.denominator/dev;
+            result.setNumerator(this.numerator/dev);
+            result.setDenominator(this.denominator/dev);
         }
-        result.numerator = result.sign()* Math.abs(result.numerator);
-        result.denominator= Math.abs(result.denominator);
+        if (this.sign() != 0) {
+            result.numerator = this.sign() * Math.abs(result.numerator);
+            result.denominator = Math.abs(result.denominator);
+        }
         return result;
+//
+            
+//        int n = this.numerator, d = this.denominator, max,sign;
+//        sign = this.sign();
+//        if(sign !=0 ){
+//            n = Math.abs(n);
+//            d = Math.abs(d);
+//        }
+//        max = (n<d)? d: n;
+//        int maxDiv = 0;
+//        for (int i = max; i >= 2; i--) {
+//            if (n % i == 0 && d % i == 0) {
+//                maxDiv = i;
+//                break;
+//            }
+//        }
+//
+//        // divide the largest common denominator out of numerator, denominator
+//        if (maxDiv != 0) {
+//            n /= maxDiv;
+//            d /= maxDiv;
+//        }
+//        if(sign != 0){
+//            n *= sign;
+//        }
+//        return new Rational(n,d);
     }
 
     private int findMinDiv(){
         int result = 1;
-        int min = Math.min(this.denominator,this.numerator);
-        int sqr = (int)Math.sqrt(min);
-        for (int i = sqr; i > 0 ; i--){
+        int max = (this.denominator>this.numerator)? this.denominator : this.numerator ;
+        for (int i = max; i >= 2 ; i--){
             if((this.denominator%i == 0) && (this.numerator%i ==0))
                 return i;
         }
         return result;
     }
 
-    public String toString() {
-        Rational result = new Rational(this.reduce());
-        if (result.denominator == 1) {
-            return  ""+result.numerator;
-        }
-        return ""+result.numerator+"/"+result.denominator;
-    }
-
     @Override
     public Scalar add(Scalar s) {
-        return this.add(s);
+        return this.add(s.asRational());
     }
 
+    public Rational add(Rational s) {
+        if(this.denominator == 0 || s.denominator == 0){
+            return new Rational(0,1);}
+        int a,b;
+        a = this.getNumerator()*s.getDenominator();
+        b = this.getDenominator()*s.getDenominator();
+        a += this.getDenominator()*s.getNumerator();
+        Rational res = new Rational(a,b);
+        return res.reduce();
 
-    public Scalar add(Rational s) {
-        Rational result = new Rational(this);
-        result.numerator *= s.denominator;
-        result.denominator *= s.denominator;
-        s.numerator *= result.denominator;
-        s.denominator *= result.denominator;
-        result.numerator += s.numerator;
-        result.reduce();
-        return result;
+
     }
 
-    public Scalar add(Integer inti) {
-//        Rational result = new Rational(inti);
-        int num = this.denominator*inti.get();
-        Rational result = new Rational(this);
-        result.numerator += num;
-        return result.reduce();
+    public Rational asRational(){
+        return this;
     }
 
     @Override
     public Scalar mul(Scalar s) {
-        return this.add(s);
-    }
-
-    public Scalar mul(Rational s) {
         Rational result = new Rational(this);
-        result.numerator *= s.numerator;
-        result.denominator *= s.denominator;
-        result.reduce();
+        result.numerator *= s.asRational().numerator;
+        result.denominator *= s.asRational().denominator;
+        result.set(result.reduce());
         return result;
-
     }
 
     @Override
@@ -116,7 +155,7 @@ public class Rational implements Scalar {
     public Scalar power(int exponent) {
         Rational result = new Rational(this);
         for (int i = 1; i < exponent; i++) {
-            result.mul(this);
+           result.set(result.mul(this).asRational());
         }
         return result;
     }
@@ -131,20 +170,22 @@ public class Rational implements Scalar {
     }
 
     @Override
-    public int get() {
-        float result = this.numerator/this.denominator;
-        return Math.round(result);
+    public String toString() {
+        Rational result = new Rational(this.reduce());
+        if (result.denominator == 1) {
+            return  ""+result.numerator;
+        }
+        return ""+result.numerator+"/"+result.denominator;
     }
 
     @Override
-    public boolean equals(Scalar s) {
-        return this.equals(s);
-    }
-
-    public boolean equals(Rational s) {
-        Rational a = new Rational(s.reduce());
-        Rational b = new Rational(this.reduce());
-        return ((b.denominator == a.denominator)&& (b.numerator == a.numerator));
+    public boolean equals(Object s) {
+        this.set(this.reduce());// make sure the sing is in the numerator
+        if (s instanceof Scalar){
+            Rational other = new Rational(((Scalar) s).asRational());
+            return ((this.numerator/this.denominator) == (other.numerator/other.denominator));
+        }
+        return false;
     }
 }
 

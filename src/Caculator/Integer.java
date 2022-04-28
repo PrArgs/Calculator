@@ -9,36 +9,34 @@ public class Integer implements Scalar {
         this.number=0;
     }
 
-
-
     public Integer(Integer copy){ //copy constructor
         this.number=copy.number;
     }
+
     public Integer(int val){ //constructor
         this.number=val;
-    }
-
-    public String toString(){
-        return ""+this.number;
     }
 
     public int get(){
         return this.number;
     }
 
-    @Override
-    public boolean equals(Scalar s) {
-        return this.equals(s);
-    }
-
-
-    public boolean equals(Integer s) {
-        return s.number==this.number;
-    }
-
-
     public void set(int num) {
         this.number = num;
+    }
+
+    @Override
+    public boolean equals(Object s) {
+        if (s instanceof Integer) {
+            return ((Integer) s).number==this.number;
+        }
+        if(s instanceof Rational){
+            if(((Rational)s).getDenominator()==1){
+                return ((Rational) s).getNumerator()==this.number;
+            }
+        }
+        System.out.println("Not a scalar.....");
+        return false;
     }
 
     @Override
@@ -46,7 +44,7 @@ public class Integer implements Scalar {
         return this.add(s);
     }
 
-    public Scalar add(Integer s) {
+    public Integer add(Integer s) {
         Integer result = new Integer(this);
         result.number += s.number;
         return result;
@@ -54,7 +52,7 @@ public class Integer implements Scalar {
 
     @Override
     public Scalar mul(Scalar s) {
-        return null;
+        return this.mul(s);
     }
 
     public Integer mul(Integer s) {
@@ -73,14 +71,13 @@ public class Integer implements Scalar {
 
     @Override
     public Scalar power(int exponent) {
-        Scalar result = new Integer(this);
+        int expRes = this.number;
         for (int i = 1; i < exponent; i++){
-            result.mul(this);
+            expRes *= this.number;
         }
+        Scalar result = new Integer(expRes);
         return result;
     }
-
-
 
     @Override
     public int sign() {
@@ -88,6 +85,16 @@ public class Integer implements Scalar {
             return 0;
         }
         return (this.number < 0) ? -1 : 1;
+    }
+
+    @Override
+    public Rational asRational() {
+        return new Rational(this.number,1);
+    }
+
+    @Override
+    public String toString(){
+        return ""+this.number;
     }
 }
 
